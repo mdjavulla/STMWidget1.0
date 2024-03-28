@@ -11,65 +11,85 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 @SpringBootApplication
 public class UpdateServerApplication {
+
+    private static Map<String, byte[]> updateFiles = new HashMap<>();
+    private static String currentVersion = "1.0"; // Initial version
 
     public static void main(String[] args) {
         SpringApplication.run(UpdateServerApplication.class, args);
     }
 
-}
+    @RestController
+    static class UpdateController {
 
-@RestController
-class UpdateController {
+        @GetMapping("/update")
+        public ResponseEntity<byte[]> getUpdate() throws IOException {
+            byte[] fileBytes = updateFiles.get(currentVersion);
+            if (fileBytes != null) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+                headers.setContentDispositionFormData("attachment", "update.zip");
+                return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        }
 
-    private static final String UPDATE_FILE_PATH = "update.zip";
+        @PostMapping("/update")
+        public ResponseEntity<String> receiveUpdate(@RequestBody UpdateRequest request) {
+            if (isNewerVersion(request.getVersion(), currentVersion)) {
+                updateFiles.put(request.getVersion(), Base64.getDecoder().decode(request.getUpdateFile()));
+                currentVersion = request.getVersion();
+                return ResponseEntity.ok("Update received successfully for version: " + request.getVersion());
+            } else {
+                return ResponseEntity.badRequest().body("Provided version is not newer than the current version");
+            }
+        }
 
-    @GetMapping("/update")
-    public ResponseEntity<byte[]> getUpdate() throws IOException {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", UPDATE_FILE_PATH);
-        ClassPathResource resource = new ClassPathResource(UPDATE_FILE_PATH);
-        byte[] fileBytes = resource.getInputStream().readAllBytes();
-        return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
+        private boolean isNewerVersion(String newVersion, String currentVersion) {
+            // Custom version comparison logic - assuming version format like "1.0", "1.1", etc.
+            String[] newVersionParts = newVersion.split("\\.");
+            String[] currentVersionParts = currentVersion.split("\\.");
+            for (int i = 0; i < Math.min(newVersionParts.length, currentVersionParts.length); i++) {
+                int newPart = Integer.parseInt(newVersionParts[i]);
+                int currentPart = Integer.parseInt(currentVersionParts[i]);
+                if (newPart > currentPart) {
+                    return true;
+                } else if (newPart < currentPart) {
+                    return false;
+                }
+            }
+            return newVersionParts.length > currentVersionParts.length;
+        }
     }
 
-    @PostMapping("/update")
-    public ResponseEntity<String> receiveUpdate(@RequestBody UpdateRequest request) {
-        // Process the update request
-        String message = "Update received successfully for version: " + request.getVersion();
-        return ResponseEntity.ok(message);
-    }
+    static class UpdateRequest {
+        private String version;
+        private String updateFile; // Base64 encoded update file content
 
-}
+        // Getters and setters
 
-class UpdateRequest {
-    private String version;
-    private String updateFile; // Base64 encoded update file content
+        public String getVersion() {
+            return version;
+        }
 
-    // Getters and setters
+        public void setVersion(String version) {
+            this.version = version;
+        }
 
-    public String getVersion() {
-        return version;
-    }
+        public String getUpdateFile() {
+            return updateFile;
+        }
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getUpdateFile() {
-        return updateFile;
-    }
-
-    public void setUpdateFile(String updateFile) {
-        this.updateFile = updateFile;
+        public void setUpdateFile(String updateFile) {
+            this.updateFile = updateFile;
+        }
     }
 }
 
@@ -85,3 +105,10 @@ The receiveUpdate method processes the update request received via POST. In this
 The UpdateRequest class represents the JSON payload expected in the POST request. It contains fields for the version number and base64 encoded update file content.
 
 Make sure you have the update.zip file in the classpath, or you can adjust the UPDATE_FILE_PATH constant to point to the correct location of your update file.
+
+In this updated code:
+
+The updateFiles map holds update files for different versions.
+The currentVersion variable keeps track of the current version.
+The isNewerVersion method compares versions based on the assumption that versions are in the format "1.0", "1.1", etc. You can adjust this logic based on your versioning scheme.
+When receiving an update request (POST /update), the application checks if the provided version is newer. If it is, the update file is saved, and the current version is updated.
