@@ -93,6 +93,21 @@ public class UpdateServerApplication {
     }
 }
 
+   private static final String UPDATED_FILES_PATH = "classpath:/updatedFiles.zip";
+
+    @GetMapping("/update")
+    public ResponseEntity<byte[]> getUpdate() throws IOException {
+        ClassPathResource resource = new ClassPathResource(UPDATED_FILES_PATH);
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        byte[] fileBytes = Files.readAllBytes(resource.getFile().toPath());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "updatedFiles.zip");
+        return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
+    }
 
 The UpdateController class defines two endpoints:
 
