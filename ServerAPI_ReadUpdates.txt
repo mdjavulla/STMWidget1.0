@@ -1,0 +1,87 @@
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+@SpringBootApplication
+public class UpdateServerApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(UpdateServerApplication.class, args);
+    }
+
+}
+
+@RestController
+class UpdateController {
+
+    private static final String UPDATE_FILE_PATH = "update.zip";
+
+    @GetMapping("/update")
+    public ResponseEntity<byte[]> getUpdate() throws IOException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", UPDATE_FILE_PATH);
+        ClassPathResource resource = new ClassPathResource(UPDATE_FILE_PATH);
+        byte[] fileBytes = resource.getInputStream().readAllBytes();
+        return new ResponseEntity<>(fileBytes, headers, HttpStatus.OK);
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<String> receiveUpdate(@RequestBody UpdateRequest request) {
+        // Process the update request
+        String message = "Update received successfully for version: " + request.getVersion();
+        return ResponseEntity.ok(message);
+    }
+
+}
+
+class UpdateRequest {
+    private String version;
+    private String updateFile; // Base64 encoded update file content
+
+    // Getters and setters
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getUpdateFile() {
+        return updateFile;
+    }
+
+    public void setUpdateFile(String updateFile) {
+        this.updateFile = updateFile;
+    }
+}
+
+
+The UpdateController class defines two endpoints:
+
+GET /update: This endpoint serves the update file (update.zip) to the Electron application.
+POST /update: This endpoint receives update requests from the Electron application along with the version number and update file content.
+The getUpdate method serves the update.zip file located in the classpath. It reads the file as bytes and constructs an HTTP response with the appropriate headers to trigger a download in the Electron application.
+
+The receiveUpdate method processes the update request received via POST. In this example, it simply returns a success message along with the version number.
+
+The UpdateRequest class represents the JSON payload expected in the POST request. It contains fields for the version number and base64 encoded update file content.
+
+Make sure you have the update.zip file in the classpath, or you can adjust the UPDATE_FILE_PATH constant to point to the correct location of your update file.

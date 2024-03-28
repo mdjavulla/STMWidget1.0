@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- Update Content Security Policy to allow scripts from the CDN -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com;">
+
+    <link rel="stylesheet" href="./css/stm.css">
+    <title>Station Monitor 2.0</title>
+</head>
+
+<body>
+    <div id="header">
+        <img id="logo" src="./images/DHL_Logo.PNG" alt="Company Logo">
+    </div>
+
+    <div id="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Sl.No</th>
+                    <th>Metrics</th>
+                    <th>Global Standard</th>
+                    <th>Actual Performance</th>
+                    <th>Unit</th>
+                    <th>No of Issues</th>
+                    <th>Issues List</th>
+                    <th>Source</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="button-container">
+        <button class="button" id="station-metrics">Station Metrics</button>
+        <button class="button" id="refresh-layout">Refresh Layout</button>
+    </div>
+
+    <!-- Include your local JavaScript file -->
+    <script src="./js/stm_script.js"></script>
+</body>
+
+</html>

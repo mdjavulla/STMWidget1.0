@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <link rel="stylesheet" href="./css/stm.css">
+
+    <title>Station Monitor 2.0</title>
+</head>
+
+<body>
+    <div id="header">
+        <img id="logo" src="./images/DHL_Logo.PNG" alt="Company Logo">
+    </div>
+    <title>STM Detail Page</title>
+
+    <div id="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Sl.No</th>
+                    <th>Metrics</th>
+                    <th>Global Standard</th>
+                    <th>Actual Performance</th>
+                    <th>Unit</th>
+                    <th>No of Issues</th>
+                    <th>Issues List</th>
+                    <th>Source</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+
+            </tbody>
+        </table>
+    </div>
+
+    <div id="button-container">
+        <button class="button">Station Metrics</button>
+        <button class="button">Refresh Layout</button>
+    </div>
+</body>
+
+</html>
