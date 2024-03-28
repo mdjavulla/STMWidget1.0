@@ -112,3 +112,67 @@ The updateFiles map holds update files for different versions.
 The currentVersion variable keeps track of the current version.
 The isNewerVersion method compares versions based on the assumption that versions are in the format "1.0", "1.1", etc. You can adjust this logic based on your versioning scheme.
 When receiving an update request (POST /update), the application checks if the provided version is newer. If it is, the update file is saved, and the current version is updated.
+
+Electron code to auto-update:
+// Initialize auto-updater
+function initAutoUpdater() {
+  // Set the URL for the update feed (your development server)
+  autoUpdater.setFeedURL({
+    url: 'https://your-development-server.com/update', // Replace with your development server URL
+    serverType: 'json' // Set to 'json' if your server provides updates in JSON format
+  });
+
+  // Check for updates
+  autoUpdater.checkForUpdatesAndNotify();
+}
+
+// IPC event for getting app version
+ipcMain.on('app_version', (event) => {
+  event.sender.send('app_version', { version: app.getVersion() });
+});
+
+// Handle auto-update events
+autoUpdater.on('update-available', () => {
+  // Notify user that an update is available
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update Available',
+    message: 'A new version of the application is available. Downloading now...',
+    buttons: ['OK']
+  });
+});
+
+autoUpdater.on('update-downloaded', () => {
+  // Prompt the user to install the downloaded update
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update Downloaded',
+    message: 'The update has been downloaded. Do you want to install it now?',
+    buttons: ['Install', 'Later']
+  }).then((result) => {
+    if (result.response === 0) {
+      // Quit and install update
+      autoUpdater.quitAndInstall();
+    }
+  });
+});
+
+// Handle auto-update errors
+autoUpdater.on('error', (error) => {
+  console.error('Auto-update error:', error.message);
+});
+
+Explanation:
+Electron auto-updater code appears to be correctly configured to interact with the Spring Boot server API for downloading updates based on version comparison. Here's a breakdown of how it works:
+
+Initialization (initAutoUpdater function): This function initializes the auto-updater and sets the feed URL to your development server where the update server API is hosted (https://your-development-server.com/update). It specifies that the server provides updates in JSON format.
+
+Checking for Updates (autoUpdater.checkForUpdatesAndNotify): This function checks for updates from the server and notifies the user if an update is available.
+
+IPC Event for App Version (ipcMain.on('app_version', ...): This event handler listens for an IPC event called 'app_version' and sends back the current version of the Electron application.
+
+Handling Update Events (autoUpdater.on('update-available', ...), autoUpdater.on('update-downloaded', ...), autoUpdater.on('error', ...)): These event listeners handle different stages of the update process:
+
+'update-available': Notifies the user that an update is available.
+'update-downloaded': Prompts the user to install the downloaded update and performs the installation if the user agrees.
+'error': Handles any errors that occur during the update process and logs them to the console.
